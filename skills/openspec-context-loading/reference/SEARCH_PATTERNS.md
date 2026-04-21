@@ -1,109 +1,62 @@
-# Windows终端下查找Markdown文件内容技巧汇总
+# OpenSpec 搜索模式
 
-以下整理一些在Windows终端（如 PowerShell、CMD 或 Windows Terminal）下，针对 Markdown 文件内容查找的常用方法和技巧：
+本文件汇总针对官方 OpenSpec 目录结构的常见搜索模式，用于快速回答“有哪些规范”“哪些变更正在进行”“某项能力定义在哪里”等问题。
 
-## 1. 使用 findstr 查找内容
-
-`findstr` 是 Windows 下常用的命令行查找工具，支持正则表达式。
-
-### 查找包含关键词的行
+## 1. 列出能力
 
 ```bash
-grep -n "关键词" *.md
+find openspec/specs -mindepth 1 -maxdepth 1 -type d -exec basename {} \;
 ```
 
-### 支持递归查找
+## 2. 列出进行中的 change
 
 ```bash
-grep -R -n "关键词" --include="*.md" .
+find openspec/changes -maxdepth 1 -type d -not -path "openspec/changes" -not -path "*/archive"
 ```
-- `/S`：递归子目录查找
 
-### 查找多个关键词（包含任一）
+## 3. 列出归档历史
 
 ```bash
-grep -R -n -i -E "关键字1|关键字2" --include="*.md" .
+find openspec/changes/archive -maxdepth 1 -mindepth 1 -type d -exec basename {} \;
 ```
-- `/I`：忽略大小写
 
-### 查找不包含某关键词的行
+## 4. 搜索 Requirement
 
 ```bash
-grep -n -v "不包含的词" *.md
+grep -r "### Requirement:" openspec/specs/
 ```
-- `/V`：查找不包含指定内容的行
 
-### 使用正则表达式查找（部分支持）
+## 5. 搜索 Scenario
 
 ```bash
-grep -n -E "^# " *.md
+grep -r "#### Scenario:" openspec/specs/
 ```
-- `/R`：使用正则表达式
-- `/C:"表达式"`：指定搜索字符串或表达式
 
-## 2. 利用 PowerShell 强大字符串处理能力
-
-### 获取包含关键词的行及文件名
+## 6. 搜索进行中 change 的摘要
 
 ```bash
-grep -R "关键词" --include="*.md"
+for change in openspec/changes/*/; do
+  if [ "$change" != "openspec/changes/archive/" ]; then
+    echo "=== $(basename "$change") ==="
+    grep -A 3 "## Why" "$change/proposal.md"
+  fi
+done
 ```
 
-### 查找包含多关键词的行
+## 7. 判断 change 是否接近可归档
 
 ```bash
-grep -R -E "关键字1|关键字2" --include="*.md"
+grep -n "^- \[ \]\|^- \[x\]" openspec/changes/{change-id}/tasks.md
 ```
 
-### 查找并统计匹配数量
+## 8. 搜索特定 capability 的规范
 
 ```bash
-grep -R "关键词" --include="*.md" | wc -l
+cat openspec/specs/{capability}/spec.md
 ```
 
-### 只显示文件名
+## 使用建议
 
-```bash
-grep -R -l "关键词" --include="*.md"
-```
-
-## 3. 模糊/复杂模式查找建议
-
-- 使用正则表达式时，建议采用 PowerShell 的 `Select-String`。
-- 例如查找代码块开头：
-
-```bash
-grep -R "^```" --include="*.md"
-```
-
-- 查找所有标题（以 # 开头）：
-
-```bash
-grep -R "^#" --include="*.md"
-```
-
-## 4. 其他技巧
-
-- 查看与标记相关内容（如 TODO、FIXME）：
-
-```bash
-grep -R -n -i "TODO|FIXME" --include="*.md"
-```
-
-- 结合管道进行更复杂的过滤处理：
-
-```bash
-grep -R "关键词" --include="*.md" | grep -v "排除词"
-```
-
-## 5. 扩展工具推荐
-
-- **grep for Windows**：可安装 [GnuWin32 grep](http://gnuwin32.sourceforge.net/packages/grep.htm) 或 [Git Bash (含grep)](https://gitforwindows.org/) 获得和 Linux 一样的强大 grep 查找能力。
-
-  示例：
-
-  ```bash
-  grep -rn "关键词" *.md
-  ```
-
-
+- 先给高层概览，再按用户需要下钻
+- 优先总结，不要直接倾倒大段原文
+- 如果仓库不存在 `openspec/` 目录，要明确告诉用户当前项目尚未建立官方 OpenSpec 结构
