@@ -5,6 +5,7 @@
 ### 新功能
 - 新增 `design.md` 和 `tasks.md` 模板，替换原有的 `tasks.json` 模板
 - 新增 `AGENTS.md` 项目说明文档
+- 新增仓库级 `README.md`，补充 OpenSpec skills 仓库说明、工作流与使用约定
 
 ### 重构
 - 重构多个技能的 SKILL.md 和参考文档，精简内容结构
